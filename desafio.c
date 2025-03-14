@@ -67,12 +67,10 @@ int main() {
         }
         else if((diferenca + ciclos) == 0){
             flag_negativo = 1;
-            printf("A diferença é negativa\n");
             break;
         }
         else if(ciclos == diferenca){
             flag_positivo = 1;
-            printf("A diferença é positiva\n");
             break;
         }
     }
