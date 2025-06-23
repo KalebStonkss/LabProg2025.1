@@ -11,6 +11,7 @@ typedef struct {
     float valor;
     char tipo[30];
     char nome[50];
+    float distancia;
 } Pedido;
 
 Pedido pedidos[MAX_PEDIDOS];
@@ -47,7 +48,7 @@ void adicionarPedido() {
     }
 
     char data_input[20], data_formatada[11];
-    float valor;
+    float valor,distancia;
     char tipo[30], nome[50];
 
     printf("Data do pedido: ");
@@ -66,23 +67,27 @@ void adicionarPedido() {
     printf("Valor (R$): ");
     scanf("%f", &valor);
     limparBuffer();
+    
+    printf("Distância percorrida (km): ");
+    scanf("%f", &distancia);
 
     Pedido *p = &pedidos[total_pedidos++];
     strcpy(p->data, data_formatada);
     p->valor = valor;
     strcpy(p->tipo, tipo);
     strcpy(p->nome, nome);
+    p->distancia = distancia;
 
     printf("Pedido adicionado com sucesso!\n");
 }
 
 void exibirPedidos() {
     printf("\nPedidos registrados:\n");
-    printf("Data       | Valor   | Tipo             | Nome\n");
-    printf("-----------|---------|------------------|----------------\n");
+    printf("Data       | Valor   | Tipo             | Nome         | Distância Percorrida(km)\n");
+    printf("-----------|---------|------------------|--------------|-----------------------------\n");
     for (int i = 0; i < total_pedidos; i++) {
         Pedido p = pedidos[i];
-        printf("%-10s | R$%-6.2f | %-16s | %-16s\n", p.data, p.valor, p.tipo, p.nome);
+        printf("%-10s | R$%-4.2f | %-16s | %-12s | %.2f\n", p.data, p.valor, p.tipo, p.nome,p.distancia);
     }
 }
 
@@ -136,44 +141,38 @@ time_t converterString_Time(const char* dataStr) {
     return -1; 
 }
 
-void atualizarImposto(time_t data) {
+void atualizarTaxaEntrega() {
     int pedidos_atualizados = 0;
 
     for (int i = 0; i < total_pedidos; i++) {
-        time_t data_pedido = converterString_Time(pedidos[i].data);
-        if (data_pedido == -1) {
-            continue;
-        }
-
-        double diff_segundos = difftime(data, data_pedido);
-        int diff_dias = diff_segundos / (60 * 60 * 24);
+        float dist_pedido = pedidos[i].distancia;
 
         float taxa = 0.0;
 
-        if(diff_dias > 720){
+        if(dist_pedido > 16){
             taxa = 1.15;
         } 
-        else if(diff_dias > 360){
+        else if(dist_pedido > 12){
             taxa = 1.175;
         } 
-        else if(diff_dias > 180){
+        else if(dist_pedido > 8){
             taxa = 1.20;
         } 
-        else if(diff_dias > 90){
+        else if(dist_pedido > 4){
             taxa = 1.225;
         }
 
         if(taxa > 0.0){
             float valor_antigo = pedidos[i].valor;
             pedidos[i].valor *= taxa;
-            printf("Pedido de %s (R$%.2f) atualizado para R$%.2f (pedido feito há %d dias)\n",
-                   pedidos[i].nome, valor_antigo, pedidos[i].valor, diff_dias);
+            printf("Pedido de %s (R$%.2f) atualizado para R$%.2f (distância de %.1f km)\n",
+                   pedidos[i].nome, valor_antigo, pedidos[i].valor, dist_pedido);
             pedidos_atualizados++;
         }
     }
 
     if (pedidos_atualizados == 0){
-        printf("Nenhum pedido era antigo o suficiente para atualização dos impostos.\n");
+        printf("Nenhuma entrega era longe o suficiente para atualização dos impostos.\n");
     } 
     else{
         printf("\n%d pedido(s) teve(tiveram) o valor atualizado com sucesso!\n", pedidos_atualizados);
@@ -190,7 +189,7 @@ void menuPrincipal(time_t data) {
         printf("5. Ordenar por valor\n");
         printf("6. Agrupar por tipo e ordenar por valor\n");
         printf("7. Agrupar por tipo e ordenar por data\n");
-        printf("8. Atualizar Impostos\n");
+        printf("8. Atualizar Taxa de Entrega\n");
         printf("0. Sair\n");
         printf("Escolha: ");
         scanf("%d", &op);
@@ -204,7 +203,7 @@ void menuPrincipal(time_t data) {
             case 5: ordenarPedidos(3); break;
             case 6: agruparPorTipoOrdenar(1); break;
             case 7: agruparPorTipoOrdenar(0); break;
-            case 8: atualizarImposto(data); break;
+            case 8: atualizarTaxaEntrega(); break;
             case 0: printf("Encerrando...\n"); break;
             default: printf("Opção inválida!\n");
         }
